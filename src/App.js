@@ -1,13 +1,89 @@
 import {Component} from 'react'
+import {v4 as uuidv4} from 'uuid'
 import PasswordItem from './components/PasswordItem'
 
 import './App.css'
 
+const bgColorsArray = [
+  'bg-color-1',
+  'bg-color-2',
+  'bg-color-3',
+  'bg-color-4',
+  'bg-color-5',
+  'bg-color-6',
+  'bg-color-7',
+  'bg-color-8',
+  'bg-color-9',
+  'bg-color-10',
+]
+
 class App extends Component {
-  state = {passwordsDetailsList: [{name: 'Anand'}]}
+  state = {
+    website: '',
+    username: '',
+    password: '',
+    passwordsDetailsList: [],
+    showPasswords: false,
+    searchInput: '',
+  }
+
+  getBgColor = () => {
+    const shuffledColorsList = bgColorsArray.sort(() => Math.random() - 0.556)
+    console.log(shuffledColorsList)
+    return shuffledColorsList[0]
+  }
+
+  onWebsiteInput = e => this.setState({website: e.target.value})
+
+  onUsernameInput = e => this.setState({username: e.target.value})
+
+  onPasswordInput = e => this.setState({password: e.target.value})
+
+  onFormSubmit = e => {
+    e.preventDefault()
+    const {website, username, password, passwordsDetailsList} = this.state
+    const newPasswordSet = {
+      id: uuidv4(),
+      website,
+      username,
+      password,
+      bgColorClassName: this.getBgColor(),
+    }
+    this.setState({
+      passwordsDetailsList: [...passwordsDetailsList, newPasswordSet],
+      website: '',
+      username: '',
+      password: '',
+    })
+  }
+
+  togglePasswordsDisplay = () =>
+    this.setState(prevState => ({showPasswords: !prevState.showPasswords}))
+
+  deletePasswordItem = id => {
+    this.setState(prevState => ({
+      passwordsDetailsList: prevState.passwordsDetailsList.filter(
+        eachPasswordItem => eachPasswordItem.id !== id,
+      ),
+    }))
+  }
+
+  onSearchInput = e => this.setState({searchInput: e.target.value})
+
+  getPasswordsList = () => {
+    const {passwordsDetailsList, searchInput} = this.state
+    const searchedResults = passwordsDetailsList.filter(eachPasswordItem =>
+      eachPasswordItem.website
+        .toLowerCase()
+        .includes(searchInput.toLowerCase()),
+    )
+    return searchedResults
+  }
 
   render() {
-    const {passwordsDetailsList} = this.state
+    const {showPasswords, website, username, password} = this.state
+    const searchedResults = this.getPasswordsList()
+    console.log(searchedResults)
     return (
       <div className="home-bg-container">
         <div className="all-items-container">
@@ -17,7 +93,7 @@ class App extends Component {
             className="page-logo"
           />
           <div className="form-and-image-container">
-            <form className="form">
+            <form onSubmit={this.onFormSubmit} className="form">
               <h3 className="form-main-heading">Add New Password</h3>
               <div className="icon-and-input-container">
                 <div className="form-input-icon-container">
@@ -27,7 +103,13 @@ class App extends Component {
                     className="form-input-icon"
                   />
                 </div>
-                <input placeholder="Enter Website" className="form-input" />
+                <input
+                  onChange={this.onWebsiteInput}
+                  value={website}
+                  placeholder="Enter Website"
+                  className="form-input"
+                  type="text"
+                />
               </div>
               <div className="icon-and-input-container">
                 <div className="form-input-icon-container">
@@ -37,7 +119,13 @@ class App extends Component {
                     className="form-input-icon"
                   />
                 </div>
-                <input placeholder="Enter Username" className="form-input" />
+                <input
+                  onChange={this.onUsernameInput}
+                  value={username}
+                  placeholder="Enter Username"
+                  className="form-input"
+                  type="text"
+                />
               </div>
               <div className="icon-and-input-container">
                 <div className="form-input-icon-container">
@@ -47,7 +135,13 @@ class App extends Component {
                     className="form-input-icon"
                   />
                 </div>
-                <input placeholder="Enter Password" className="form-input" />
+                <input
+                  onChange={this.onPasswordInput}
+                  value={password}
+                  placeholder="Enter Password"
+                  className="form-input"
+                  type="password"
+                />
               </div>
               <button type="submit" className="add-button">
                 Add
@@ -63,7 +157,7 @@ class App extends Component {
             <div className="your-passwords-text-count-search-box">
               <div className="your-passwords-text-and-count">
                 <h3 className="your-passwords-text">Your Passwords</h3>
-                <span className="passwords-count">0</span>
+                <p className="passwords-count">{searchedResults.length}</p>
               </div>
               <div className="search-icon-and-search-bar">
                 <div className="search-icon-container">
@@ -74,6 +168,7 @@ class App extends Component {
                   />
                 </div>
                 <input
+                  onChange={this.onSearchInput}
                   className="search-bar"
                   type="search"
                   placeholder="Search"
@@ -86,6 +181,7 @@ class App extends Component {
                 id="togglePasswordsDisplay"
                 className="checkbox"
                 type="checkbox"
+                onChange={this.togglePasswordsDisplay}
               />
               <label
                 htmlFor="togglePasswordsDisplay"
@@ -94,10 +190,15 @@ class App extends Component {
                 Show Passwords
               </label>
             </div>
-            {passwordsDetailsList.length > 0 ? (
-              <ul>
-                {passwordsDetailsList.map(eachPassWordDetails => (
-                  <PasswordItem passwordDetails={eachPassWordDetails} />
+            {searchedResults.length > 0 ? (
+              <ul className="all-passwords-list-container">
+                {searchedResults.map(eachPassWordDetails => (
+                  <PasswordItem
+                    passwordDetails={eachPassWordDetails}
+                    deletePasswordItem={this.deletePasswordItem}
+                    showPasswords={showPasswords}
+                    key={eachPassWordDetails.id}
+                  />
                 ))}
               </ul>
             ) : (
@@ -107,7 +208,7 @@ class App extends Component {
                   alt="no passwords"
                   src="https://assets.ccbp.in/frontend/react-js/no-passwords-img.png"
                 />
-                <h3 className="no-passwords-text">No Passwords</h3>
+                <p className="no-passwords-text">No Passwords</p>
               </div>
             )}
           </div>
